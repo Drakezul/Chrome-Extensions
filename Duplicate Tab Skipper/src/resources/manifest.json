@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "name": "Duplicate Tab Skipper Plus",
+  "description": "This extension skips duplicate tabs and private instagram profiles",
+  "version": "1.0",
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.instagram.com/*",
+        "*://directory.io/*"
+      ],
+      "js": [
+        "content-script.js",
+        "jquery-3.2.1.min.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "notifications"
+  ]
+}
