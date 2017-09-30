@@ -5,21 +5,8 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
                 chrome.tabs.remove(sender.tab.id);
                 return showNotification(sender.tab, message);
         }
-    }/* else {
-        switch (message.event) {
-            case "Timestamp":
-                timestamps.push(message.time);
-                let sum = 0;
-                for (let i = 1; i < timestamps.length; i++) {
-                    sum += timestamps[i] - timestamps[i - 1];
-                }
-                console.log(sum / (timestamps.length - 1));
-                return;
-        }
-    }*/
+    }
 });
-
-//var timestamps = [];
 
 chrome.tabs.onCreated.addListener(function (tab) {
     return removeDuplicate(tab);

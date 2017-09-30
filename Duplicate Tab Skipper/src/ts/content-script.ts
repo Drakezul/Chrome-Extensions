@@ -1,9 +1,11 @@
 var $: any;
 /** check for private profile without permissions */
 document.addEventListener("DOMContentLoaded", function () {
+    console.log("Content Script");
     if (document.URL.includes("instagram.com")) {
         if (document.URL.includes("instagram.com/p/")) {
             setTimeout(() => { addDownloadButton(false) }, 500);
+            console.log("Profile");
         } else if (document.URL.includes("instagram.com") && !document.URL.endsWith(".com/")) {
             getPrivacyStatus();
         }
@@ -61,7 +63,7 @@ function getImageRef(header: HTMLElement) {
 
 function getPrivacyStatus() {
     let mainDiv = document.getElementsByTagName("main")[0].getElementsByTagName("article")[0].children[1];
-    if (mainDiv.getElementsByTagName("h2").length > 0) {
+    if (mainDiv.children.length == 1) {
         chrome.runtime.sendMessage("Private");
     }
 }
