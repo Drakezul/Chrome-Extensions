@@ -5,23 +5,8 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
                 chrome.tabs.remove(sender.tab.id);
                 return showInstagramNotification(sender.tab, message);
         }
-    } else if (message.command && message.command == "Clear History") {
-        deletion(message.url);
     }
 });
-
-function deletion(url: string) {
-    chrome.history.search({ text: url, maxResults: 1000 }, function (results) {
-        if (results.length > 0) {
-            results.forEach((result) => {
-                chrome.history.deleteUrl({ url: result.url });
-            });
-            deletion(url);
-        } else {
-            console.log("Deletion concluded");
-        }
-    });
-}
 
 chrome.tabs.onCreated.addListener(function (tab) {
     return removeDuplicate(tab);
@@ -39,7 +24,21 @@ chrome.tabs.onUpdated.addListener(function (tabId: number, changeInfo: chrome.ta
             }
         }
     }
+    /*if (tabOnHost(tab, ["pr0gramm.com", "directory.io", "youtube.com", "twitch.tv", "weareone.fm"])) {
+        console.log("Deleting url: " + tab.url);
+        chrome.history.deleteUrl({ url: tab.url });
+    }*/
 });
+
+/*function tabOnHost(tab: chrome.tabs.Tab, hosts: string[]): boolean {
+    for (let url of hosts) {
+        let host = new URL(tab.url).host;
+        if (host == url || host == "www." + url) {
+            return true;
+        }
+    }
+    return false;
+}*/
 
 function removeDuplicate(tab: chrome.tabs.Tab) {
     chrome.tabs.query({ "url": tab.url }, function (duplicate: chrome.tabs.Tab[]) {

@@ -9,10 +9,6 @@
     ],
     "persistent": true
   },
-  "browser_action": {
-    "default_popup": "action-popup.html",
-    "default_title": "Duplicate Tab Skipper Plus"
-  },
   "content_scripts": [
     {
       "matches": [
@@ -26,7 +22,7 @@
     }
   ],
   "permissions": [
-    "history",
+    //"history",
     "tabs",
     "notifications"
   ]
