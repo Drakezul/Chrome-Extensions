@@ -1,23 +1,10 @@
-var $: any;
-/** check for private profile without permissions */
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Content Script");
     if (document.URL.includes("instagram.com")) {
         if (document.URL.includes("instagram.com/p/")) {
             setTimeout(() => { addDownloadButton(false) }, 500);
             console.log("Profile");
         } else if (document.URL.includes("instagram.com") && !document.URL.endsWith(".com/")) {
             getPrivacyStatus();
-        }
-    } else if (document.URL.includes("directory.io")) {
-        //chrome.runtime.sendMessage({ event: "Timestamp", time: new Date().getTime() });
-        //1MkupVKiCik9iyfnLrJoZLx9RH4rkF3hnA
-        //1PpfcTgYL3UH8hCkfExAVxDtKLZibEJ5AN
-        if ($("*:contains('1MkupVKiCik9iyfnLrJoZLx9RH4rkF3hnA')").length === 0) {
-            let index = window.location.href.substr("http://directory.io/".length);
-            window.location.href = "" + (parseInt(index) + 1);
-        } else {
-            window.alert("This the page");
         }
     }
 });
