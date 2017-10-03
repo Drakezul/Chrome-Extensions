@@ -3,7 +3,7 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
         switch (message) {
             case "Private":
                 chrome.tabs.remove(sender.tab.id);
-                return showNotification(sender.tab, message);
+                return showInstagramNotification(sender.tab, message);
         }
     }
 });
@@ -31,19 +31,19 @@ function removeDuplicate(tab: chrome.tabs.Tab) {
         if (duplicate.length > 1) {
             chrome.tabs.remove(tab.id);
             chrome.tabs.update(duplicate[0].id, { "active": true }, () => { });
-            return showNotification(tab, "Duplicate");
+            return showInstagramNotification(tab, "Duplicate");
         }
     });
 }
 
-function showNotification(tab: chrome.tabs.Tab, request: string) {
-    var notification = new Notification("Instagram Skipper", {
-        icon: 'instagram-icon.png',
-        body: request + " " + tab.title.split("•")[0]
+function showInstagramNotification(tab: chrome.tabs.Tab, request: string) {
+    chrome.notifications.create(undefined, {
+        title: "Instagram Skipper",
+        iconUrl: "instagram-icon.png",
+        message: request + " " + tab.title.split("•")[0]
+    }, (id: string) => {
+        setTimeout(chrome.notifications.clear(id), 2000);
     });
-    setTimeout(() => {
-        notification.close();
-    }, 2000);
     return true;
 }
 

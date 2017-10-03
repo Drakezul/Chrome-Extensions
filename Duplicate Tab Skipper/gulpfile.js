@@ -1,7 +1,8 @@
 const tsFiles = "src/ts/**/*.ts";
-const buildDir = "./build";
+const buildDir = "./build/";
 const resources = "src/resources/**/*.*";
 const jsFiles = "src/js/**/*.js";
+const htmlFiles = "src/html/**/*.html";
 
 var gulp = require("gulp");
 var ts = require("gulp-typescript");
@@ -17,14 +18,18 @@ gulp.task("tsc", function () {
         .js.pipe(gulp.dest(buildDir));
 });
 
-gulp.task("default", ["deploy", "tsc"], function () {
-    gulp.watch(tsFiles, ["deploy", "tsc"]);
+gulp.task("default", ["deploy"], function () {
+    gulp.watch(tsFiles, ["deploy"]);
+    gulp.watch(resources, ["deploy"]);
+    gulp.watch(htmlFiles, ["deploy"]);
 });
 
 
-gulp.task("deploy", function () {
+gulp.task("deploy", ["tsc"], function () {
     gulp.src(resources)
-        .pipe(gulp.dest("./build/"));
+        .pipe(gulp.dest(buildDir));
     gulp.src(jsFiles)
-        .pipe(gulp.dest("./build/"));
+        .pipe(gulp.dest(buildDir));
+    gulp.src(htmlFiles)
+        .pipe(gulp.dest(buildDir));
 });
