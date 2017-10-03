@@ -5,8 +5,23 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
                 chrome.tabs.remove(sender.tab.id);
                 return showInstagramNotification(sender.tab, message);
         }
+    } else if (message.command && message.command == "Clear History") {
+        deletion(message.url);
     }
 });
+
+function deletion(url: string) {
+    chrome.history.search({ text: url, maxResults: 1000 }, function (results) {
+        if (results.length > 0) {
+            results.forEach((result) => {
+                chrome.history.deleteUrl({ url: result.url });
+            });
+            deletion(url);
+        } else {
+            console.log("Deletion concluded");
+        }
+    });
+}
 
 chrome.tabs.onCreated.addListener(function (tab) {
     return removeDuplicate(tab);
