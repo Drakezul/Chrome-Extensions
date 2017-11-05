@@ -2,8 +2,7 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
     if (typeof message == "string") {
         switch (message) {
             case "Private":
-                chrome.tabs.remove(sender.tab.id);
-                return showInstagramNotification(sender.tab, message);
+                chrome.tabs.remove(sender.tab.id, () => showInstagramNotification(sender.tab, message));
         }
     }
 });
@@ -17,10 +16,12 @@ chrome.tabs.onUpdated.addListener(function (tabId: number, changeInfo: chrome.ta
         if (removeDuplicate(tab)) {
             return true;
         } else {
-            if (tab.url.includes("instagram.com/p/")) {
-                chrome.tabs.sendMessage(tab.id, INSTAGRAMS.POST);
-            } else if (tab.url.includes("instagram.com/") && !tab.url.endsWith("instagram.com/")) {
-                chrome.tabs.sendMessage(tab.id, INSTAGRAMS.PROFILE);
+            if (tabIdGuards.indexOf(tab.id) == -1) {
+                if (tab.url.includes("instagram.com/p/")) {
+                    chrome.tabs.sendMessage(tab.id, INSTAGRAMS.POST, addGuard(tab.id));
+                } else if (tab.url.includes("instagram.com/") && !tab.url.endsWith("instagram.com/")) {
+                    chrome.tabs.sendMessage(tab.id, INSTAGRAMS.PROFILE, addGuard(tab.id));
+                }
             }
         }
     }
@@ -29,6 +30,22 @@ chrome.tabs.onUpdated.addListener(function (tabId: number, changeInfo: chrome.ta
         chrome.history.deleteUrl({ url: tab.url });
     }*/
 });
+
+var tabIdGuards: number[] = [];
+
+function addGuard(tabId: number) {
+    tabIdGuards.push(tabId);
+    return function () {
+        removeGuard(tabId);
+    };
+};
+
+function removeGuard(tabId: number) {
+    let index = tabIdGuards.indexOf(tabId);
+    if (index != -1) {
+        tabIdGuards.splice(index, 1);
+    }
+}
 
 /*function tabOnHost(tab: chrome.tabs.Tab, hosts: string[]): boolean {
     for (let url of hosts) {
@@ -52,11 +69,12 @@ function removeDuplicate(tab: chrome.tabs.Tab) {
 
 function showInstagramNotification(tab: chrome.tabs.Tab, request: string) {
     chrome.notifications.create(undefined, {
+        type: "basic",
         title: "Instagram Skipper",
         iconUrl: "instagram-icon.png",
         message: request + " " + tab.title.split("•")[0]
     }, (id: string) => {
-        setTimeout(chrome.notifications.clear(id), 2000);
+        setTimeout(() => { chrome.notifications.clear(id) }, 2000);
     });
     return true;
 }

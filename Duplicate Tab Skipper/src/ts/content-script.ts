@@ -2,14 +2,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (document.URL.includes("instagram.com")) {
         if (document.URL.includes("instagram.com/p/")) {
             setTimeout(() => { addDownloadButton(false) }, 500);
-            console.log("Profile");
         } else if (document.URL.includes("instagram.com") && !document.URL.endsWith(".com/")) {
             getPrivacyStatus();
         }
     }
 });
 
-chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender, callback) {
     if (message === INSTAGRAM.POST) {
         setTimeout(function () {
             if (document.getElementsByTagName("header").length == 2) {
@@ -17,9 +16,13 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
             } else {
                 addDownloadButton(false);
             }
+            callback("Done");
         }, 500);
     } else if (message === INSTAGRAM.PROFILE) {
-        setTimeout(getPrivacyStatus, 500);
+        setTimeout(() => {
+            getPrivacyStatus();
+            callback("Done");
+        }, 500);
     }
 });
 
