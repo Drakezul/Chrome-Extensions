@@ -80,6 +80,7 @@ function showInstagramNotification(tab: chrome.tabs.Tab, request: string) {
 }
 
 enum INSTAGRAMS {
-    POST = "POST",
-    PROFILE = "PROFILE"
+    POST,
+    PROFILE,
+    MAIN
 }

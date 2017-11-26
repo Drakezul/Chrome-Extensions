@@ -1,68 +1,122 @@
 document.addEventListener("DOMContentLoaded", function () {
-    if (document.URL.includes("instagram.com")) {
-        if (document.URL.includes("instagram.com/p/")) {
-            setTimeout(() => { addDownloadButton(false) }, 500);
-        } else if (document.URL.includes("instagram.com") && !document.URL.endsWith(".com/")) {
-            getPrivacyStatus();
+    let url = new URL(document.URL);
+    if (url.host == "www.instagram.com") {
+        if (url.pathname.startsWith("/p/")) {
+            setTimeout(() => { InstagramPost.addImageLink() }, 500);
+        } else if (url.pathname === "/") {
+            setTimeout(() => { InstagramFeed.addImageLinkToArticles(); }, 500);
+        } else if (url.pathname.match(/instagram.com(\/[^\/]*\/)$/m)) {
+            //TODO
+            //InstagramProfile.addImageLink()
+            sendPrivacyStatus();
+        } else {
+            //TODO
         }
     }
 });
 
-chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender, callback) {
-    if (message === INSTAGRAM.POST) {
+chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender, callback: (status: string) => void) {
+    if (message == INSTAGRAM.POST) {
         setTimeout(function () {
-            if (document.getElementsByTagName("header").length == 2) {
-                addDownloadButton(true);
-            } else {
-                addDownloadButton(false);
-            }
+            InstagramPost.addImageLink();
             callback("Done");
         }, 500);
     } else if (message === INSTAGRAM.PROFILE) {
         setTimeout(() => {
-            getPrivacyStatus();
+            //TODO add Instagram.Stories
+            //sendPrivacyStatus();
             callback("Done");
         }, 500);
     }
 });
 
-/** Profile */
-const instagramDownloadButton = "instagram-download-button";
-
-function addDownloadButton(profile: boolean) {
-    if (!document.getElementById(instagramDownloadButton)) {
-        let headerIndex = profile ? 1 : 0;
-        let header = document.getElementsByTagName("header")[headerIndex];
-
-        let span = header.children[2];
-        let downloadSpan = document.createElement("span");
-        downloadSpan.setAttribute("class", span.getAttribute("class"));
-
-        header.appendChild(downloadSpan);
-        let downloadHref = document.createElement("a");
-        downloadHref.href = getImageRef(header);
-        downloadHref.id = instagramDownloadButton;
-        downloadHref.textContent = "Download";
-        downloadSpan.appendChild(downloadHref);
-    }
-}
-
-function getImageRef(header: HTMLElement) {
-    return header.parentElement.children[1].getElementsByTagName("img")[0].src
-}
-
-function getPrivacyStatus() {
+function sendPrivacyStatus() {
     let mainDiv = document.getElementsByTagName("main")[0].getElementsByTagName("article")[0].children[1];
     if (mainDiv.children.length == 1) {
         chrome.runtime.sendMessage("Private");
     }
 }
 
-declare interface Window {
-    _sharedData: any;
+const instagramDownloadButton = "instagram-download-button";
+
+class InstagramBase {
+
+    public static addProfileLinkToCommentSection(htmlLink: HTMLElement, context: HTMLElement) {
+        let textArea = context.getElementsByTagName("textarea")[0];
+        if (textArea) {
+            let commentSection = textArea.parentElement.parentElement;
+            commentSection.innerHTML = "";
+            commentSection.appendChild(htmlLink);
+        }
+    }
+
+    public static createLink(extractedLink: string) {
+        let linkSpan = document.createElement("span");
+        let link = document.createElement("a");
+        link.href = extractedLink;
+        link.id = instagramDownloadButton;
+        link.textContent = "Link";
+        linkSpan.appendChild(link);
+        return linkSpan;
+    }
+}
+
+class InstagramPost extends InstagramBase {
+
+    public static addImageLink() {
+        if (!document.getElementById(instagramDownloadButton)) {
+            let context = document.getElementsByTagName("body")[0];
+            InstagramBase.addProfileLinkToCommentSection(InstagramBase.createLink(InstagramPost.getImageRef()), context);
+        }
+    }
+
+    private static getImageRef() {
+        let images = document.getElementsByTagName("img");
+        return images[images.length - 1].getAttribute("src");
+    }
+}
+
+class InstagramFeed extends InstagramBase {
+
+    public static observer: MutationObserver;
+    private static counter = 0;
+
+    public static addImageLinkToArticles() {
+        InstagramFeed.observer = new MutationObserver((mutations: MutationRecord[]) => {
+            let articles = document.getElementsByTagName("article");
+            for (let article of articles) {
+                InstagramFeed.addImageLinkToArticle(article);
+            }
+        });
+        let articlesWrapper = document.getElementsByTagName("article")[0].parentElement;
+        InstagramFeed.observer.observe(articlesWrapper, {
+            attributes: false,
+            childList: true
+        });
+    }
+
+    private static addImageLinkToArticle(article: HTMLElement): void {
+        InstagramFeed.getImageRef(article, (link: string) => {
+            let wrappedLink = InstagramBase.createLink(link);
+            InstagramBase.addProfileLinkToCommentSection(wrappedLink, article);
+        });
+    }
+
+    private static getImageRef(article: HTMLElement, callback: (src: string) => void) {
+        let img = article.getElementsByTagName("img")[1];
+        if (!img) {
+            setTimeout(() => {
+                InstagramFeed.getImageRef(article, callback);
+            }, 100);
+            return;
+        } else {
+            img.onload = () => callback(img.getAttribute("src"));
+        }
+    }
 }
 
 enum INSTAGRAM {
-    POST = "POST",
-    PROFILE = "PROFILE"
+    POST,
+    PROFILE,
+    MAIN
 }
