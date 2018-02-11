@@ -6,12 +6,12 @@
   "license": "MIT",
   "dependencies": {
     "@types/chrome": "0.0.48",
-    "jquery": "^3.2.1"
+    "jquery": "^3.3.1"
   },
   "devDependencies": {
-    "@types/jquery": "^3.2.16",
+    "@types/jquery": "^3.3.0",
     "gulp": "^3.9.1",
-    "gulp-typescript": "^3.2.2",
-    "typescript": "^2.4.2"
+    "gulp-typescript": "^3.2.4",
+    "typescript": "^2.7.1"
   }
 }
