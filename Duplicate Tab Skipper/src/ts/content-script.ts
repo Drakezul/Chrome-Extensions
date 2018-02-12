@@ -34,7 +34,6 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
         setTimeout(() => {
             updateGuard = false;
             instagramHandler();
-            console.dir("invoked handler");
             callback("Done");
         }, 500);
     }
