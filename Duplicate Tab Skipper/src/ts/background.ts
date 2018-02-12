@@ -16,19 +16,11 @@ chrome.tabs.onUpdated.addListener(function (tabId: number, changeInfo: chrome.ta
         if (removeDuplicate(tab)) {
             return true;
         } else {
-            if (tabIdGuards.indexOf(tab.id) == -1) {
-                if (tab.url.includes("instagram.com/p/")) {
-                    chrome.tabs.sendMessage(tab.id, INSTAGRAMS.POST, addGuard(tab.id));
-                } else if (tab.url.includes("instagram.com/") && !tab.url.endsWith("instagram.com/")) {
-                    chrome.tabs.sendMessage(tab.id, INSTAGRAMS.PROFILE, addGuard(tab.id));
-                }
+            if (tabIdGuards.indexOf(tab.id) == -1 && tab.url.includes("instagram.com/")) {
+                chrome.tabs.sendMessage(tab.id, "INSTAGRAM", addGuard(tab.id));
             }
         }
     }
-    /*if (tabOnHost(tab, ["pr0gramm.com", "directory.io", "youtube.com", "twitch.tv", "weareone.fm"])) {
-        console.log("Deleting url: " + tab.url);
-        chrome.history.deleteUrl({ url: tab.url });
-    }*/
 });
 
 var tabIdGuards: number[] = [];
@@ -58,10 +50,10 @@ function removeGuard(tabId: number) {
 }*/
 
 function removeDuplicate(tab: chrome.tabs.Tab) {
-    chrome.tabs.query({ "url": tab.url }, function (duplicate: chrome.tabs.Tab[]) {
+    chrome.tabs.query({"url": tab.url}, function (duplicate: chrome.tabs.Tab[]) {
         if (duplicate.length > 1) {
             chrome.tabs.remove(tab.id);
-            chrome.tabs.update(duplicate[0].id, { "active": true }, () => { });
+            chrome.tabs.update(duplicate[0].id, {"active": true}, () => {});
             return showInstagramNotification(tab, "Duplicate");
         }
     });
@@ -74,7 +66,7 @@ function showInstagramNotification(tab: chrome.tabs.Tab, request: string) {
         iconUrl: "instagram-icon.png",
         message: request + " " + tab.title.split("•")[0]
     }, (id: string) => {
-        setTimeout(() => { chrome.notifications.clear(id) }, 2000);
+        setTimeout(() => {chrome.notifications.clear(id)}, 2000);
     });
     return true;
 }
