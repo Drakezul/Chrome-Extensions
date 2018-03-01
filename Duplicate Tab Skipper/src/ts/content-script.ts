@@ -1,4 +1,4 @@
-const PROFILE_PICTURE_CLASS_NAME = "_9bt3u";
+const PROFILE_PICTURE_CLASS_NAME = "_rewi8";
 const INSTAGRAM_USER_PATH_REGEX = /^(\/[^\/]*\/)$/m;
 const INSTAGRAM_DOWNLOAD_BUTTON = "instagram-download-button";
 const INSTAGRAM_PRIVATE_PROFILE_CLASS_NAME = "_q8pf2 _r1mv3";
