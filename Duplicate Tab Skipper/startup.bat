@@ -1,1 +1,1 @@
-code . && gulp
+code . && npm run gulp
