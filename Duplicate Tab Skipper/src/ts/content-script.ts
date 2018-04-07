@@ -41,14 +41,20 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
 
 class InstagramBase {
 
+    public static getProfileName(profileURL: string): string {
+        return new URL(profileURL).pathname.replace(/\//g, "");
+    }
+
     /**
      * returns true, if the profile is private
      */
     public static redirectPrivateToProfilePicture(): boolean {
         let mainDiv = document.getElementsByClassName(INSTAGRAM_PRIVATE_PROFILE_CLASS_NAME);
         if (mainDiv.length == 1) {
-            const username = window.location.pathname.replace(/\//g, "");
-            window.location.href = InstagramBase.get1080ResolutionSource(InstagramBase.getProfilePictureHtmlElement()) + "?username=" + username;
+            const username = this.getProfileName(window.location.href);
+            InstagramBase.getProfilePictureLink(function (href: string) {
+                window.location.href = href + "?username=" + username;
+            });
             return true;
         } else {
             return false;
@@ -63,20 +69,41 @@ class InstagramBase {
         if (!document.getElementById(INSTAGRAM_PROFILE_PICTURE_SRC_LINK)) {
             const profilePicture = InstagramBase.getProfilePictureHtmlElement();
             if (profilePicture && profilePicture.parentElement) {
-                let wrapper = profilePicture.parentElement.parentElement;
-                let link = document.createElement("a");
-                link.id = INSTAGRAM_PROFILE_PICTURE_SRC_LINK;
-                link.href = InstagramBase.get1080ResolutionSource(profilePicture);
-                link.textContent = "Link";
-                link.style.textAlign = "center";
-                link.style.margin = "5px 0px 0px 5px";
-                wrapper.appendChild(link);
+                InstagramBase.getProfilePictureLink(function (href: string) {
+                    console.dir(href);
+                    let wrapper = profilePicture.parentElement.parentElement;
+                    let link = document.createElement("a");
+                    link.id = INSTAGRAM_PROFILE_PICTURE_SRC_LINK;
+                    link.href = href;
+                    link.textContent = "Link";
+                    link.style.textAlign = "center";
+                    link.style.margin = "5px 0px 0px 5px";
+                    wrapper.appendChild(link);
+                });
             }
         }
     }
 
-    public static get1080ResolutionSource(element: Element): string {
-        return element.getAttribute("src").replace("vp/", "").replace("s150x150", "s1080x1080");
+    public static getUserId(profileURL: string, callback: (userId: string) => void) {
+        let xhttp = new XMLHttpRequest();
+        xhttp.open("GET", profileURL + "?__a=1");
+        xhttp.send();
+        xhttp.onload = function () {
+            callback(JSON.parse(xhttp.responseText)['graphql']['user']['id']);
+        }
+    }
+
+    public static getProfilePictureLink(callback: (href: string) => void) {
+        InstagramBase.getUserId(window.location.href, function (userId: string) {
+            let apiAccess = "https://i.instagram.com/api/v1/users/" + userId + "/info/";
+            let xhttp = new XMLHttpRequest();
+            xhttp.open("GET", apiAccess)
+            xhttp.send();
+            xhttp.onload = function () {
+                let href: string = JSON.parse(xhttp.responseText)["user"]["hd_profile_pic_url_info"]["url"];
+                callback(href);
+            };
+        });
     }
 
     public static addLinkToCommentSection(htmlLink: HTMLElement, context: HTMLElement) {
