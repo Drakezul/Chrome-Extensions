@@ -4,27 +4,48 @@ const INSTAGRAM_DOWNLOAD_BUTTON = "instagram-download-button";
 const INSTAGRAM_PRIVATE_PROFILE_CLASS_NAME = "_q8pf2 _r1mv3";
 const INSTAGRAM_PROFILE_PICTURE_SRC_LINK = "profile-picture-src-link";
 
-const instagramHandler = function (param1?: any) {
+const urlHandler = function (param1?: any) {
     let url = new URL(document.URL);
     if (url.host == "www.instagram.com") {
-        if (url.pathname.startsWith("/p/")) {
-            //post
-            InstagramPost.addImageLink();
-        } else if (url.pathname === "/") {
-            //instagram feed
-            InstagramFeed.addImageLinkToArticles();
-        } else if (url.pathname.match(INSTAGRAM_USER_PATH_REGEX)) {
-            const isPrivate = InstagramBase.redirectPrivateToProfilePicture();
-            if (!isPrivate) {
-                InstagramBase.addProfilePictureLink();
-            }
-        } else {
-            console.log(url.pathname + " is not handled yet");
-        }
+        instagramHandler(url);
+    } else if (url.host == "lotv.spawningtool.com") {
+        spawningtoolHandler();
+    } else {
+        console.dir(url.host);
     }
 };
 
-window.addEventListener("load", instagramHandler);
+const instagramHandler = function (url?: URL) {
+    if (url.pathname.startsWith("/p/")) {
+        //post
+        InstagramPost.addImageLink();
+    } else if (url.pathname === "/") {
+        //instagram feed
+        InstagramFeed.addImageLinkToArticles();
+    } else if (url.pathname.match(INSTAGRAM_USER_PATH_REGEX)) {
+        const isPrivate = InstagramBase.redirectPrivateToProfilePicture();
+        if (!isPrivate) {
+            InstagramBase.addProfilePictureLink();
+        }
+    } else {
+        console.log(url.pathname + " is not handled yet");
+    }
+}
+
+const spawningtoolHandler = function () {
+    document.title = document.title.replace("Spawning Tool:", "");
+    // set colors
+    let bodyStyle = document.getElementsByTagName("body")[0].style;
+    bodyStyle.color = "#1db992";
+    bodyStyle.background = "#161618";
+    // change button action
+    let button = document.getElementById("pause-bo-timer") as HTMLButtonElement;
+    button.addEventListener("click", (event) => {
+        window.location.reload();
+    });
+}
+
+window.addEventListener("load", urlHandler);
 
 let updateGuard = false;
 
@@ -66,11 +87,11 @@ class InstagramBase {
     }
 
     public static addProfilePictureLink(): void {
-        if (!document.getElementById(INSTAGRAM_PROFILE_PICTURE_SRC_LINK)) {
-            const profilePicture = InstagramBase.getProfilePictureHtmlElement();
-            if (profilePicture && profilePicture.parentElement) {
-                InstagramBase.getProfilePictureLink(function (href: string) {
-                    console.dir(href);
+        const profilePicture = InstagramBase.getProfilePictureHtmlElement();
+        const linkElement = document.getElementById(INSTAGRAM_PROFILE_PICTURE_SRC_LINK);
+        if (!linkElement && profilePicture && profilePicture.parentElement) {
+            InstagramBase.getProfilePictureLink(function (href: string) {
+                if (!linkElement) {
                     let wrapper = profilePicture.parentElement.parentElement;
                     let link = document.createElement("a");
                     link.id = INSTAGRAM_PROFILE_PICTURE_SRC_LINK;
@@ -79,8 +100,8 @@ class InstagramBase {
                     link.style.textAlign = "center";
                     link.style.margin = "5px 0px 0px 5px";
                     wrapper.appendChild(link);
-                });
-            }
+                }
+            });
         }
     }
 
@@ -94,7 +115,7 @@ class InstagramBase {
     }
 
     public static getProfilePictureLink(callback: (href: string) => void) {
-        InstagramBase.getUserId(window.location.href, function (userId: string) {
+        /*InstagramBase.getUserId(window.location.href, function (userId: string) {
             let apiAccess = "https://i.instagram.com/api/v1/users/" + userId + "/info/";
             let xhttp = new XMLHttpRequest();
             xhttp.open("GET", apiAccess)
@@ -103,7 +124,7 @@ class InstagramBase {
                 let href: string = JSON.parse(xhttp.responseText)["user"]["hd_profile_pic_url_info"]["url"];
                 callback(href);
             };
-        });
+        });*/
     }
 
     public static addLinkToCommentSection(htmlLink: HTMLElement, context: HTMLElement) {

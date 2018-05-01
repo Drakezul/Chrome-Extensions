@@ -13,7 +13,7 @@
     "gulp-typescript": "^3.2.4",
     "typescript": "^2.7.1"
   },
-  "scripts":{
-	"gulp": "gulp"
+  "scripts": {
+    "gulp": "gulp"
   }
 }

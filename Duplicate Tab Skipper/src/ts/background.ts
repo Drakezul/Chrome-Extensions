@@ -63,7 +63,7 @@ function showInstagramNotification(tab: chrome.tabs.Tab, request: string) {
     chrome.notifications.create(undefined, {
         type: "basic",
         title: "Instagram Skipper",
-        iconUrl: "instagram-icon.png",
+        iconUrl: "https://www.instagram.com/static/images/ico/favicon-192.png/b407fa101800.png",
         message: request + " " + tab.title.split("•")[0]
     }, (id: string) => {
         setTimeout(() => {chrome.notifications.clear(id)}, 2000);
