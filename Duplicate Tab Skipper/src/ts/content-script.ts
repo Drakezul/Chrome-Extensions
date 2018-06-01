@@ -74,7 +74,7 @@ class InstagramBase {
     }
 
     public static getProfilePictureHtmlElement() {
-        return document.getElementsByClassName(PROFILE_PICTURE_CLASS_NAME)[0];
+        return document.getElementsByTagName("header")[0].getElementsByTagName("img")[0];
     }
 
     public static addProfilePictureLink(): void {
