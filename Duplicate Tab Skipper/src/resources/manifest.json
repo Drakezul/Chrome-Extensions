@@ -9,6 +9,10 @@
     ],
     "persistent": true
   },
+  "browser_action": {
+    "default_title": "Options",
+    "default_popup": "options.html"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -23,6 +27,7 @@
   ],
   "permissions": [
     "tabs",
-    "notifications"
+    "notifications",
+    "storage"
   ]
 }

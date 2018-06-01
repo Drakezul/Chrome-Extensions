@@ -1,8 +1,12 @@
 const PROFILE_PICTURE_CLASS_NAME = "_rewi8";
 const INSTAGRAM_USER_PATH_REGEX = /^(\/[^\/]*\/)$/m;
 const INSTAGRAM_DOWNLOAD_BUTTON = "instagram-download-button";
-const INSTAGRAM_PRIVATE_PROFILE_CLASS_NAME = "_q8pf2 _r1mv3";
 const INSTAGRAM_PROFILE_PICTURE_SRC_LINK = "profile-picture-src-link";
+
+let updateGuard = false;
+let spawningPoolBackgroundColor;
+let spawningPoolTextColor;
+let skipPrivateInstagramProfiles;
 
 const urlHandler = function (param1?: any) {
     let url = new URL(document.URL);
@@ -15,7 +19,7 @@ const urlHandler = function (param1?: any) {
     }
 };
 
-const instagramHandler = function (url?: URL) {
+const instagramHandler = function (url: URL = new URL(document.URL)) {
     if (url.pathname.startsWith("/p/")) {
         //post
         InstagramPost.addImageLink();
@@ -23,8 +27,8 @@ const instagramHandler = function (url?: URL) {
         //instagram feed
         InstagramFeed.addImageLinkToArticles();
     } else if (url.pathname.match(INSTAGRAM_USER_PATH_REGEX)) {
-        const isPrivate = InstagramBase.redirectPrivateToProfilePicture();
-        if (!isPrivate) {
+        const redirected = InstagramBase.redirectPrivateToProfilePicture();
+        if (!redirected) {
             InstagramBase.addProfilePictureLink();
         }
     } else {
@@ -36,29 +40,16 @@ const spawningtoolHandler = function () {
     document.title = document.title.replace("Spawning Tool:", "");
     // set colors
     let bodyStyle = document.getElementsByTagName("body")[0].style;
-    bodyStyle.color = "#1db992";
-    bodyStyle.background = "#161618";
+    bodyStyle.color = spawningPoolTextColor;
+    bodyStyle.background = spawningPoolBackgroundColor;
     // change button action
     let button = document.getElementById("pause-bo-timer") as HTMLButtonElement;
-    button.addEventListener("click", (event) => {
-        window.location.reload();
-    });
-}
-
-window.addEventListener("load", urlHandler);
-
-let updateGuard = false;
-
-chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender, callback: (status: string) => void) {
-    if (!updateGuard && message == "INSTAGRAM") {
-        updateGuard = true;
-        setTimeout(() => {
-            updateGuard = false;
-            instagramHandler();
-            callback("Done");
-        }, 500);
+    if (button) {
+        button.addEventListener("click", (event) => {
+            window.location.reload();
+        });
     }
-});
+};
 
 class InstagramBase {
 
@@ -70,8 +61,8 @@ class InstagramBase {
      * returns true, if the profile is private
      */
     public static redirectPrivateToProfilePicture(): boolean {
-        let mainDiv = document.getElementsByClassName(INSTAGRAM_PRIVATE_PROFILE_CLASS_NAME);
-        if (mainDiv.length == 1) {
+        let mainDiv = document.getElementsByTagName("h2");
+        if (mainDiv.length == 1 && skipPrivateInstagramProfiles) {
             const username = this.getProfileName(window.location.href);
             InstagramBase.getProfilePictureLink(function (href: string) {
                 window.location.href = href + "?username=" + username;
@@ -105,17 +96,22 @@ class InstagramBase {
         }
     }
 
-    public static getUserId(profileURL: string, callback: (userId: string) => void) {
-        let xhttp = new XMLHttpRequest();
-        xhttp.open("GET", profileURL + "?__a=1");
-        xhttp.send();
-        xhttp.onload = function () {
-            callback(JSON.parse(xhttp.responseText)['graphql']['user']['id']);
+    public static getUserId(callback: (userId: string) => void) {
+        for (let element of document.getElementsByTagName("script")) {
+            if (element.textContent.includes("window._sharedData = ")) {
+                let matches = element.textContent.match(/"id":"\d*"/g);
+                if (matches.length < 2) {
+                    window.location.reload();
+                } else {
+                    callback(matches[1].split(":")[1].replace(/"/g, ''));
+                }
+                return;
+            }
         }
     }
 
     public static getProfilePictureLink(callback: (href: string) => void) {
-        /*InstagramBase.getUserId(window.location.href, function (userId: string) {
+        InstagramBase.getUserId(function (userId: string) {
             let apiAccess = "https://i.instagram.com/api/v1/users/" + userId + "/info/";
             let xhttp = new XMLHttpRequest();
             xhttp.open("GET", apiAccess)
@@ -124,7 +120,7 @@ class InstagramBase {
                 let href: string = JSON.parse(xhttp.responseText)["user"]["hd_profile_pic_url_info"]["url"];
                 callback(href);
             };
-        });*/
+        });
     }
 
     public static addLinkToCommentSection(htmlLink: HTMLElement, context: HTMLElement) {
@@ -211,3 +207,28 @@ enum INSTAGRAM {
     PROFILE,
     MAIN
 }
+
+(function () {
+    window.addEventListener("load", urlHandler);
+
+    chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender, callback: (status: string) => void) {
+        if (!updateGuard && message == "INSTAGRAM") {
+            updateGuard = true;
+            setTimeout(() => {
+                updateGuard = false;
+                instagramHandler();
+                callback("Done");
+            }, 500);
+        }
+    });
+
+    chrome.storage.sync.get({
+        backgroundColor: "#161618",
+        textColor: "#1db992",
+        skipPrivateInstagramProfiles: false
+    }, function (items) {
+        spawningPoolBackgroundColor = items.backgroundColor;
+        spawningPoolTextColor = items.textColor;
+        skipPrivateInstagramProfiles = items.skipPrivateInstagramProfiles;
+    });
+})();

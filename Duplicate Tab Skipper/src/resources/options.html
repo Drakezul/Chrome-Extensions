@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>My Test Extension Options</title>
+    <style>
+        html,
+        body {
+            width: 300px;
+        }
+
+        .flex-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings,
+        .options {
+            margin: 0 auto;
+            width: fit-content;
+            text-align: right;
+        }
+
+        button {
+            width: fit-content;
+            margin: 5px auto;
+        }
+
+        #footer {
+            position: fixed;
+            padding: 10px;
+            bottom: 0px;
+            right: 0px;
+        }
+    </style>
+</head>
+
+<body class="flex-column">
+    <div class="spawning-tool settings flex-column">
+        <h2>Spawning-Tool settings</h2>
+        <div class="options">
+            <div>
+                <label for="background-color-option"> Background </label>
+                <input type="color" id="background-color-option" class="option">
+            </div>
+            <div>
+                <label for="text-color-option"> Text color </label>
+                <input type="color" id="text-color-option" class="option">
+            </div>
+        </div>
+    </div>
+    <div class="instagram settings">
+        <h2>Instagram Settings</h2>
+        <div>
+            <label for="skip-private-profiles"> Skip private profiles </label>
+            <input type="checkbox" id="skip-private-instagram-profiles" class="option">
+        </div>
+    </div>
+
+    <div id="footer"></div>
+    <script src="options.js "></script>
+</body>
+
+</html>
