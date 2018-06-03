@@ -4,9 +4,25 @@
 <head>
     <title>My Test Extension Options</title>
     <style>
-        html,
         body {
-            width: 300px;
+            --border-color: #ee4d2e;
+            --default-border: 1px solid var(--border-color);
+            --font-color: #1db992;
+            margin: 0px;
+            width: fit-content;
+            background: #161618;
+            color: var(--font-color);
+            font-size: 100%;
+        }
+
+        button {
+            width: fit-content;
+            margin: 5px auto;
+        }
+
+        input[type="color"] {
+            margin: 2px;
+            margin-left: 5px;
         }
 
         .flex-column {
@@ -14,16 +30,38 @@
             flex-direction: column;
         }
 
-        .settings,
-        .options {
-            margin: 0 auto;
-            width: fit-content;
-            text-align: right;
+        .settings {
+            text-align: center;
         }
 
-        button {
+        .settings-group {
+            margin: 0px auto 5px auto;
             width: fit-content;
-            margin: 5px auto;
+            text-align: right;
+            border: var(--default-border);
+            border-width: 2px;
+        }
+
+        .title {
+            width: 100%;
+            color: #1db992;
+            padding: 5px 0px 5px 0px;
+            margin: 0;
+            border-bottom: var(--default-border);
+        }
+
+        .color-settings-panel {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .list-entry button {
+            margin: 2px;
+        }
+
+        .selectors,
+        .color-settings-panel {
+            border-bottom: var(--default-border);
         }
 
         #footer {
@@ -36,27 +74,7 @@
 </head>
 
 <body class="flex-column">
-    <div class="spawning-tool settings flex-column">
-        <h2>Spawning-Tool settings</h2>
-        <div class="options">
-            <div>
-                <label for="background-color-option"> Background </label>
-                <input type="color" id="background-color-option" class="option">
-            </div>
-            <div>
-                <label for="text-color-option"> Text color </label>
-                <input type="color" id="text-color-option" class="option">
-            </div>
-        </div>
-    </div>
-    <div class="instagram settings">
-        <h2>Instagram Settings</h2>
-        <div>
-            <label for="skip-private-profiles"> Skip private profiles </label>
-            <input type="checkbox" id="skip-private-instagram-profiles" class="option">
-        </div>
-    </div>
-
+    <div id="settings" class="settings"> </div>
     <div id="footer"></div>
     <script src="options.js "></script>
 </body>

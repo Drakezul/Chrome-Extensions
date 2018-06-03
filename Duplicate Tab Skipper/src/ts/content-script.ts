@@ -4,22 +4,37 @@ const INSTAGRAM_DOWNLOAD_BUTTON = "instagram-download-button";
 const INSTAGRAM_PROFILE_PICTURE_SRC_LINK = "profile-picture-src-link";
 
 let updateGuard = false;
-let spawningPoolBackgroundColor;
-let spawningPoolTextColor;
-let skipPrivateInstagramProfiles;
 
-const urlHandler = function (param1?: any) {
+let settings: Settings;
+
+function urlHandler(param1?: any) {
     let url = new URL(document.URL);
-    if (url.host == "www.instagram.com") {
+    let host = url.host;
+    if (host == "www.instagram.com") {
         instagramHandler(url);
-    } else if (url.host == "lotv.spawningtool.com") {
-        spawningtoolHandler();
-    } else {
-        console.dir(url.host);
+    }
+    console.dir(url);
+    for (let colorSetting of settings.colorSettings) {
+        for (let ruleHost of colorSetting.hosts) {
+            if (ruleHost == host) {
+                settingsHandler(colorSetting);
+            }
+        }
+    }
+    if (host == "lotv.spawningtool.com") {
+        console.log("spawningtool");
+        document.title = document.title.replace("Spawning Tool:", "");
+        // change button action
+        let button = document.getElementById("pause-bo-timer") as HTMLButtonElement;
+        if (button) {
+            button.addEventListener("click", (event) => {
+                window.location.reload();
+            });
+        }
     }
 };
 
-const instagramHandler = function (url: URL = new URL(document.URL)) {
+function instagramHandler(url: URL = new URL(document.URL)) {
     if (url.pathname.startsWith("/p/")) {
         //post
         InstagramPost.addImageLink();
@@ -36,18 +51,13 @@ const instagramHandler = function (url: URL = new URL(document.URL)) {
     }
 }
 
-const spawningtoolHandler = function () {
-    document.title = document.title.replace("Spawning Tool:", "");
-    // set colors
-    let bodyStyle = document.getElementsByTagName("body")[0].style;
-    bodyStyle.color = spawningPoolTextColor;
-    bodyStyle.background = spawningPoolBackgroundColor;
-    // change button action
-    let button = document.getElementById("pause-bo-timer") as HTMLButtonElement;
-    if (button) {
-        button.addEventListener("click", (event) => {
-            window.location.reload();
-        });
+function settingsHandler(colorSetting: ColorSetting) {
+    for (let selector of colorSetting.cssSelectors) {
+        for (let element of document.querySelectorAll(selector)) {
+            let style = (element as HTMLElement).style;
+            style.setProperty("background", colorSetting.backgroundColor);
+            style.setProperty("color", colorSetting.textColor);
+        }
     }
 };
 
@@ -62,7 +72,7 @@ class InstagramBase {
      */
     public static redirectPrivateToProfilePicture(): boolean {
         let mainDiv = document.getElementsByTagName("h2");
-        if (mainDiv.length == 1 && skipPrivateInstagramProfiles) {
+        if (mainDiv.length == 1 && options.skipPrivateInstagramProfiles) {
             const username = this.getProfileName(window.location.href);
             InstagramBase.getProfilePictureLink(function (href: string) {
                 window.location.href = href + "?username=" + username;
@@ -210,7 +220,6 @@ enum INSTAGRAM {
 
 (function () {
     window.addEventListener("load", urlHandler);
-
     chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender, callback: (status: string) => void) {
         if (!updateGuard && message == "INSTAGRAM") {
             updateGuard = true;
@@ -222,13 +231,30 @@ enum INSTAGRAM {
         }
     });
 
-    chrome.storage.sync.get({
-        backgroundColor: "#161618",
-        textColor: "#1db992",
+    let defaultData = {
+        colorSettings: [{
+            title: "Pleasent Green",
+            hosts: ["lotv.spawningtool.com"],
+            cssSelectors: ["body"],
+            backgroundColor: "#161618",
+            textColor: "#1db992"
+        }],
         skipPrivateInstagramProfiles: false
-    }, function (items) {
-        spawningPoolBackgroundColor = items.backgroundColor;
-        spawningPoolTextColor = items.textColor;
-        skipPrivateInstagramProfiles = items.skipPrivateInstagramProfiles;
+    };
+    chrome.storage.sync.get(defaultData, function (items: Settings) {
+        settings = items;
     });
 })();
+
+interface Settings {
+    colorSettings: ColorSetting[],
+    skipPrivateInstagramProfiles: boolean
+}
+
+interface ColorSetting {
+    title: string,
+    hosts: string[],
+    cssSelectors: string[],
+    backgroundColor?: string,
+    textColor?: string
+}

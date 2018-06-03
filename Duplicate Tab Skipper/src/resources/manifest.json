@@ -16,8 +16,7 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.instagram.com/*",
-        "*://*.spawningtool.com/build/*"
+        "<all_urls>"
       ],
       "js": [
         "content-script.js"
