@@ -121,7 +121,10 @@ function createSkipPrivateInstagramProfilesOption(value: boolean): HTMLDivElemen
     checkbox.checked = value;
     checkbox.classList.add("mandatory-setting");
     checkbox.classList.add("checkbox");
-    checkbox.addEventListener("change", save_options);
+    checkbox.addEventListener("change", function () {
+        options.skipPrivateInstagramProfiles = checkbox.checked;
+        save_options();
+    });
 
     let div = document.createElement("div");
     div.classList.add("single-setting");

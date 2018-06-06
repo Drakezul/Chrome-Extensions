@@ -13,7 +13,6 @@ function urlHandler(param1?: any) {
     if (host == "www.instagram.com") {
         instagramHandler(url);
     }
-    console.dir(url);
     for (let colorSetting of settings.colorSettings) {
         for (let ruleHost of colorSetting.hosts) {
             if (ruleHost == host) {
@@ -22,7 +21,6 @@ function urlHandler(param1?: any) {
         }
     }
     if (host == "lotv.spawningtool.com") {
-        console.log("spawningtool");
         document.title = document.title.replace("Spawning Tool:", "");
         // change button action
         let button = document.getElementById("pause-bo-timer") as HTMLButtonElement;
@@ -72,7 +70,7 @@ class InstagramBase {
      */
     public static redirectPrivateToProfilePicture(): boolean {
         let mainDiv = document.getElementsByTagName("h2");
-        if (mainDiv.length == 1 && options.skipPrivateInstagramProfiles) {
+        if (mainDiv.length == 1 && settings.skipPrivateInstagramProfiles) {
             const username = this.getProfileName(window.location.href);
             InstagramBase.getProfilePictureLink(function (href: string) {
                 window.location.href = href + "?username=" + username;
