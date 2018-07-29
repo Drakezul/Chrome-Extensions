@@ -22,10 +22,6 @@ function getFooter(): HTMLDivElement {
     return getHtmlElementById("footer") as HTMLDivElement;
 }
 
-function getColorSettings() {
-
-}
-
 function getSkipPrivateInstagramProfilesCheckbox(): HTMLInputElement {
     return getHTMLInputElement(SKIP_PRIVATE_INSTAGRA_PROFILE_CHECKBOX_ID);
 }
@@ -40,7 +36,7 @@ function getHtmlElementById(id: string) {
 
 // Restores select box and checkbox state using the preferences
 // stored in chrome.storage.
-function open() {
+function openSettings() {
     // Use default value color = 'red' and likesColor = true.
     let defaultOptions: Settings = {
         colorSettings: [{
@@ -140,7 +136,7 @@ function getLabel(text: string, labelForId: string): HTMLLabelElement {
     return label;
 }
 
-document.addEventListener('DOMContentLoaded', open);
+document.addEventListener('DOMContentLoaded', openSettings);
 
 /* ui */
 
@@ -181,7 +177,7 @@ class ColorSettingsGroup {
         let emptyInput = document.createElement("input");
         emptyInput.type = "text";
         emptyInput.placeholder = listName;
-        let addNewElement = function (event) {
+        let addNewElement = function (event: KeyboardEvent) {
             if (event.key == "Enter" || event instanceof MouseEvent) {
                 if (emptyInput.value.length > 0) {
                     parent.insertBefore(self.getListRow(emptyInput.value, index, listName, removeButtonAction), parent.childNodes[index]);
@@ -288,7 +284,10 @@ class ColorSettingsGroup {
         colorInput.id = this.groupDiv.id + "-" + label.toLowerCase();
         colorInput.type = "color"
         colorInput.value = defaultValue;
-        colorInput.addEventListener("change", save_options);
+        colorInput.addEventListener("change", () => {
+            this.colorSetting[label.toLowerCase() + "Color"] = colorInput.value;
+            save_options();
+        });
         return colorInput;
     }
 
