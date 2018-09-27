@@ -30,7 +30,7 @@ function urlHandler(param1?: any) {
             });
         }
     }
-};
+}
 
 function instagramHandler(url: URL = new URL(document.URL)) {
     if (url.pathname.startsWith("/p/")) {
@@ -57,7 +57,7 @@ function settingsHandler(colorSetting: ColorSetting) {
             style.setProperty("color", colorSetting.textColor);
         }
     }
-};
+}
 
 class InstagramBase {
 
@@ -141,10 +141,10 @@ class InstagramBase {
     }
 
     public static createLink(extractedLink: string) {
-        let linkSpan = document.createElement("span");
+        let linkSpan = document.createElement('span');
         let link = document.createElement("a");
         link.href = extractedLink;
-        link.id = INSTAGRAM_DOWNLOAD_BUTTON;
+        link.classList.add(INSTAGRAM_DOWNLOAD_BUTTON);
         link.textContent = "Link";
         linkSpan.appendChild(link);
         return linkSpan;
@@ -154,10 +154,8 @@ class InstagramBase {
 class InstagramPost extends InstagramBase {
 
     public static addImageLink() {
-        if (!document.getElementById(INSTAGRAM_DOWNLOAD_BUTTON)) {
-            let context = document.getElementsByTagName("body")[0];
-            InstagramBase.addLinkToCommentSection(InstagramBase.createLink(InstagramPost.getImageRef()), context);
-        }
+        let articles = document.getElementsByTagName('article');
+        InstagramFeed.addImageLinkToArticle(articles[articles.length - 1]);
     }
 
     private static getImageRef() {
@@ -169,20 +167,31 @@ class InstagramPost extends InstagramBase {
 class InstagramFeed extends InstagramBase {
 
     public static observer: MutationObserver;
-    private static counter = 0;
+    public static articleObservers: MutationObserver[] = [];
+    public static handleFeedMutation = (mutations?: MutationRecord[]) => {
+        let articles = document.getElementsByTagName("article");
+        for (let article of articles) {
+            InstagramFeed.addImageLinkToArticle(article);
+        }
+    };
+
+    public static setLink = function (context: HTMLElement, link: string) {
+        let wrappedLink = InstagramBase.createLink(link);
+        InstagramBase.addLinkToCommentSection(wrappedLink, context);
+    }
 
     public static addImageLinkToArticles() {
         if (InstagramFeed.observer) {
             InstagramFeed.observer.disconnect();
         }
-        const mutationHandler = (mutations?: MutationRecord[]) => {
-            let articles = document.getElementsByTagName("article");
-            for (let article of articles) {
-                InstagramFeed.addImageLinkToArticle(article);
+        if (InstagramFeed.articleObservers) {
+            for (let articleObs of this.articleObservers) {
+                articleObs.disconnect();
             }
-        };
-        mutationHandler();
-        InstagramFeed.observer = new MutationObserver(mutationHandler);
+            this.articleObservers = [];
+        }
+        this.handleFeedMutation();
+        InstagramFeed.observer = new MutationObserver(this.handleFeedMutation);
         let articlesWrapper = document.getElementsByTagName("article")[0].parentElement;
         InstagramFeed.observer.observe(articlesWrapper, {
             attributes: false,
@@ -190,14 +199,30 @@ class InstagramFeed extends InstagramBase {
         });
     }
 
-    private static addImageLinkToArticle(article: HTMLElement): void {
-        InstagramFeed.getImageRef(article, (link: string) => {
-            let wrappedLink = InstagramBase.createLink(link);
-            InstagramBase.addLinkToCommentSection(wrappedLink, article);
-        });
+    public static addImageLinkToArticle(article: HTMLElement): void {
+        let lists = article.getElementsByTagName('ul');
+        const updateLink = (link: string) => {
+            let anchors = article.querySelectorAll('span a.' + INSTAGRAM_DOWNLOAD_BUTTON);
+            if (anchors && anchors.length > 0) {
+                (anchors[0] as HTMLAnchorElement).href = link;
+            }
+        }
+        if (lists.length > 1) {
+            let slideList = lists[0];
+            const handleArticleSlide = (mutations?: MutationRecord[]) => {
+                let translateX = slideList.parentElement.parentElement.style.transform.replace('translateX(', '').replace('px)', '');
+                let position = Math.abs(Number.parseInt(translateX) / slideList.children[0].clientWidth);
+                let src = slideList.children[position].getElementsByTagName('img')[0].src;
+                updateLink(src);
+            }
+            let articleObserver = new MutationObserver(handleArticleSlide);
+            articleObserver.observe(slideList.parentElement.parentElement, { attributes: true, childList: false });
+            InstagramFeed.articleObservers.push(articleObserver)
+        }
+        InstagramFeed.getImageRef(article, this.setLink);
     }
 
-    private static getImageRef(article: HTMLElement, callback: (src: string) => void) {
+    private static getImageRef(article: HTMLElement, callback: (context: HTMLElement, src: string) => void) {
         let img = article.getElementsByTagName("img")[1];
         if (!img) {
             setTimeout(() => {
@@ -205,7 +230,11 @@ class InstagramFeed extends InstagramBase {
             }, 100);
             return;
         } else {
-            img.onload = () => callback(img.getAttribute("src"));
+            if (img.complete) {
+                callback(article, img.getAttribute("src"));
+            } else {
+                img.onload = () => callback(article, img.getAttribute("src"));
+            }
         }
     }
 }
