@@ -8,18 +8,20 @@ chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runt
 });
 
 chrome.tabs.onCreated.addListener(function (tab) {
-    return removeDuplicate(tab);
+    removeDuplicate(tab);
 });
 
 chrome.tabs.onUpdated.addListener(function (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) {
     if (changeInfo.status == "complete") {
-        if (removeDuplicate(tab)) {
-            return true;
-        } else {
-            if (tabIdGuards.indexOf(tab.id) == -1 && tab.url.includes("instagram.com/")) {
-                chrome.tabs.sendMessage(tab.id, "INSTAGRAM", addGuard(tab.id));
+        removeDuplicate(tab, function (tabRemoved) {
+            if (tabRemoved) {
+                return true;
+            } else {
+                if (tabIdGuards.indexOf(tab.id) == -1 && tab.url.includes("instagram.com/")) {
+                    chrome.tabs.sendMessage(tab.id, "INSTAGRAM", addGuard(tab.id));
+                }
             }
-        }
+        });
     }
 });
 
@@ -49,12 +51,14 @@ function removeGuard(tabId: number) {
     return false;
 }*/
 
-function removeDuplicate(tab: chrome.tabs.Tab) {
-    chrome.tabs.query({"url": tab.url}, function (duplicate: chrome.tabs.Tab[]) {
+function removeDuplicate(tab: chrome.tabs.Tab, callback = (tabRemoved: boolean) => { }) {
+    chrome.tabs.query({ "url": tab.url }, function (duplicate: chrome.tabs.Tab[]) {
         if (duplicate.length > 1) {
             chrome.tabs.remove(tab.id);
-            chrome.tabs.update(duplicate[0].id, {"active": true}, () => {});
-            return showInstagramNotification(tab, "Duplicate");
+            chrome.tabs.update(duplicate[0].id, { "active": true }, () => { });
+            callback(showInstagramNotification(tab, "Duplicate"));
+        } else {
+            callback(false);
         }
     });
 }
@@ -66,7 +70,7 @@ function showInstagramNotification(tab: chrome.tabs.Tab, request: string) {
         iconUrl: "https://www.instagram.com/static/images/ico/favicon-192.png/b407fa101800.png",
         message: request + " " + tab.title.split("•")[0]
     }, (id: string) => {
-        setTimeout(() => {chrome.notifications.clear(id)}, 2000);
+        setTimeout(() => { chrome.notifications.clear(id) }, 2000);
     });
     return true;
 }

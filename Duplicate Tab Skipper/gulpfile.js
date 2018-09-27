@@ -18,18 +18,19 @@ gulp.task("tsc", function () {
         .js.pipe(gulp.dest(buildDir));
 });
 
-gulp.task("default", ["deploy"], function () {
-    gulp.watch(tsFiles, ["deploy"]);
-    gulp.watch(resources, ["deploy"]);
-    gulp.watch(htmlFiles, ["deploy"]);
-});
-
-
-gulp.task("deploy", ["tsc"], function () {
+gulp.task("deploy", gulp.series('tsc', function (done) {
     gulp.src(resources)
         .pipe(gulp.dest(buildDir));
     gulp.src(jsFiles)
         .pipe(gulp.dest(buildDir));
     gulp.src(htmlFiles)
         .pipe(gulp.dest(buildDir));
-});
+    done();
+}));
+
+gulp.task("default", gulp.series('deploy', function (done) {
+    gulp.watch(tsFiles, gulp.series("deploy"));
+    gulp.watch(resources, gulp.series("deploy"));
+    gulp.watch(htmlFiles, gulp.series("deploy"));
+    done();
+}));
