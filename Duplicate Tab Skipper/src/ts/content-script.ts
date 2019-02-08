@@ -40,10 +40,12 @@ function instagramHandler(url: URL = new URL(document.URL)) {
         //instagram feed
         InstagramFeed.addImageLinkToArticles();
     } else if (url.pathname.match(INSTAGRAM_USER_PATH_REGEX)) {
+        /*
         const redirected = InstagramProfilePicture.redirectPrivateToProfilePicture();
         if (!redirected) {
             InstagramProfilePicture.addProfilePictureLink();
         }
+        */
     } else {
         console.debug(url.pathname + " is not handled yet");
     }

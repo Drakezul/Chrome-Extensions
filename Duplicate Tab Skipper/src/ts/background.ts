@@ -1,9 +1,6 @@
 chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender) {
-    if (typeof message == "string") {
-        switch (message) {
-            case "Private":
-                chrome.tabs.remove(sender.tab.id, () => showInstagramNotification(sender.tab, message));
-        }
+    if (message === "Private") {
+        chrome.tabs.remove(sender.tab.id, () => showInstagramNotification(sender.tab, message));
     }
 });
 
