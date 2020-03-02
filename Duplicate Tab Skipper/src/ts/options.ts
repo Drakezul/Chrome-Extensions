@@ -285,7 +285,7 @@ class ColorSettingsGroup {
         colorInput.type = "color"
         colorInput.value = defaultValue;
         colorInput.addEventListener("change", () => {
-            this.colorSetting[label.toLowerCase() + "Color"] = colorInput.value;
+            (this.colorSetting as any)[label.toLowerCase() + "Color"] = colorInput.value;
             save_options();
         });
         return colorInput;
