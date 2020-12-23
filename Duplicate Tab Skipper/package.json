@@ -1,12 +1,12 @@
 {
   "name": "duplicate-tab-skipper",
   "version": "1.0.0",
-  "description": "Skip duplicate tabs, private instagram profiles and download instagram images",
+  "description": "Skip duplicate tabs and download instagram images",
   "author": "Sebastian Grüb",
   "license": "MIT",
   "dependencies": {
-    "@types/chrome": "0.0.48",
-    "npm": "^6.14.7"
+    "@types/chrome": "^0.0.48",
+    "npm": "^7.3.0"
   },
   "devDependencies": {
     "@types/jquery": "^3.5.0",
