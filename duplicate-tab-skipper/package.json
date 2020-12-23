@@ -4,17 +4,12 @@
   "description": "Skip duplicate tabs and download instagram images",
   "author": "Sebastian Grüb",
   "license": "MIT",
-  "dependencies": {
-    "@types/chrome": "^0.0.48",
-    "npm": "^7.3.0"
+  "scripts": {
+    "tsc": "tsc",
+    "build": "tsc && cp ./src/resources/* ./build"
   },
   "devDependencies": {
-    "@types/jquery": "^3.5.0",
-    "gulp": "^4.0.2",
-    "gulp-typescript": "^5.0.1",
-    "typescript": "^3.9.7"
-  },
-  "scripts": {
-    "gulp": "gulp"
+    "@types/chrome": "^0.0.127",
+    "typescript": "^4.1.3"
   }
 }

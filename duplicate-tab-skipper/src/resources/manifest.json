@@ -1,32 +1,15 @@
 {
   "manifest_version": 2,
-  "name": "Duplicate Tab Skipper Plus",
-  "description": "This extension skips duplicate tabs and private instagram profiles",
-  "version": "1.2",
+  "name": "Duplicate Tab Skipper",
+  "description": "This extension closes the oldest of all duplicate tabs",
+  "version": "1.3",
   "background": {
     "scripts": [
       "background.js"
-    ],
-    "persistent": true
+    ]
   },
-  "browser_action": {
-    "default_title": "Options",
-    "default_popup": "options.html"
-  },
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content-script.js"
-      ],
-      "run_at": "document_start"
-    }
-  ],
   "permissions": [
     "tabs",
-    "notifications",
-    "storage"
+    "notifications"
   ]
 }

@@ -1,79 +1,50 @@
-chrome.runtime.onMessage.addListener(function (message: any, sender: chrome.runtime.MessageSender) {
-    if (message === "Private") {
-        chrome.tabs.remove(sender.tab.id, () => showInstagramNotification(sender.tab, message));
-    }
-});
-
 chrome.tabs.onCreated.addListener(function (tab) {
     removeDuplicate(tab);
 });
-
-chrome.tabs.onUpdated.addListener(function (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) {
+chrome.tabs.onUpdated.addListener(function (_: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) {
     if (changeInfo.status == "complete") {
         removeDuplicate(tab, function (tabRemoved) {
             if (tabRemoved) {
                 return true;
-            } else {
-                if (tabIdGuards.indexOf(tab.id) == -1 && tab.url.includes("instagram.com/")) {
-                    chrome.tabs.sendMessage(tab.id, "INSTAGRAM", addGuard(tab.id));
-                }
             }
+            console.debug(`Tab with title ${tab.title || "unknown"} at url ${tab.url || "unknown"} at index ${tab.index} could not be removed`)
+            return false;
         });
     }
 });
-
-var tabIdGuards: number[] = [];
-
-function addGuard(tabId: number) {
-    tabIdGuards.push(tabId);
-    return function () {
-        removeGuard(tabId);
-    };
-};
-
-function removeGuard(tabId: number) {
-    let index = tabIdGuards.indexOf(tabId);
-    if (index != -1) {
-        tabIdGuards.splice(index, 1);
+function removeDuplicate(tab: chrome.tabs.Tab, callback = (_: boolean) => { }) {
+    if (!tab.id) {
+        return callback(false)
     }
-}
-
-/*function tabOnHost(tab: chrome.tabs.Tab, hosts: string[]): boolean {
-    for (let url of hosts) {
-        let host = new URL(tab.url).host;
-        if (host == url || host == "www." + url) {
-            return true;
+    let url = tab.url || tab.pendingUrl
+    chrome.tabs.query({ "url": url }, function (duplicates: chrome.tabs.Tab[]) {
+        if (!duplicates) {
+            return
         }
-    }
-    return false;
-}*/
-
-function removeDuplicate(tab: chrome.tabs.Tab, callback = (tabRemoved: boolean) => { }) {
-    chrome.tabs.query({ "url": tab.url }, function (duplicate: chrome.tabs.Tab[]) {
-        if (duplicate.length > 1) {
-            chrome.tabs.remove(tab.id);
-            chrome.tabs.update(duplicate[0].id, { "active": true }, () => { });
-            callback(showInstagramNotification(tab, "Duplicate"));
-        } else {
-            callback(false);
+        let lastDuplicate = duplicates.pop()
+        if (!lastDuplicate)
+            return
+        if (duplicates.length > 0) {
+            chrome.tabs.update(lastDuplicate.id as number, { "active": true }, () => { });
+        }
+        for (let duplicate of duplicates) {
+            if (duplicate.id) {
+                chrome.tabs.remove(duplicate.id as number)
+                callback(showNotification(tab, "Duplicate"));
+            } else {
+                callback(false);
+            }
         }
     });
 }
-
-function showInstagramNotification(tab: chrome.tabs.Tab, request: string) {
-    chrome.notifications.create(undefined, {
+function showNotification(tab: chrome.tabs.Tab, request: string, timeout = 3000) {
+    chrome.notifications.create("", {
         type: "basic",
-        title: "Instagram Skipper",
-        iconUrl: "https://www.instagram.com/static/images/ico/favicon-192.png/b407fa101800.png",
-        message: request + " " + tab.title.split("•")[0]
+        title: "Duplicate Tab Skipper",
+        iconUrl: "/icon.png",
+        message: `${request}: ${tab.title?.split("•")[0]} at ${tab.url || tab.pendingUrl}`,
     }, (id: string) => {
-        setTimeout(() => { chrome.notifications.clear(id) }, 2000);
+        setTimeout(() => { chrome.notifications.clear(id) }, timeout);
     });
     return true;
-}
-
-enum INSTAGRAMS {
-    POST,
-    PROFILE,
-    MAIN
 }
