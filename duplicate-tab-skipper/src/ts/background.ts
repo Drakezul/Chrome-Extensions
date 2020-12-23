@@ -1,6 +1,7 @@
 chrome.tabs.onCreated.addListener(function (tab) {
     removeDuplicate(tab);
 });
+
 chrome.tabs.onUpdated.addListener(function (_: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) {
     if (changeInfo.status == "complete") {
         removeDuplicate(tab, function (tabRemoved) {
@@ -12,39 +13,55 @@ chrome.tabs.onUpdated.addListener(function (_: number, changeInfo: chrome.tabs.T
         });
     }
 });
+
+const overridenUrls = new Map<string, Date>()
+
 function removeDuplicate(tab: chrome.tabs.Tab, callback = (_: boolean) => { }) {
     if (!tab.id) {
         return callback(false)
     }
     let url = tab.url || tab.pendingUrl
+    if (overridenUrls.has(url)) {
+        let ageInMs = new Date().getTime() - overridenUrls.get(url).getTime()
+        if (ageInMs < 5000) {
+            return callback(false)
+        }
+        overridenUrls.delete(url)
+    }
     chrome.tabs.query({ "url": url }, function (duplicates: chrome.tabs.Tab[]) {
-        if (!duplicates) {
-            return
-        }
-        let lastDuplicate = duplicates.pop()
-        if (!lastDuplicate)
-            return
-        if (duplicates.length > 0) {
-            chrome.tabs.update(lastDuplicate.id as number, { "active": true }, () => { });
-        }
-        for (let duplicate of duplicates) {
-            if (duplicate.id) {
-                chrome.tabs.remove(duplicate.id as number)
-                callback(showNotification(tab, "Duplicate"));
-            } else {
-                callback(false);
-            }
+        if (duplicates?.length > 1) {
+            chrome.tabs.remove(duplicates[duplicates.length - 1].id)
+            callback(ShowDuplicateRemovedNotification(tab));
         }
     });
 }
-function showNotification(tab: chrome.tabs.Tab, request: string, timeout = 3000) {
+
+function ShowDuplicateRemovedNotification(tab: chrome.tabs.Tab, timeout = 3000) {
+    return ShowNotification(tab, "Duplicate", timeout, (notificationId) => {
+        chrome.notifications.onClicked.addListener((clickedNotificationId) => {
+            if (clickedNotificationId == notificationId) {
+                let url = tab.url || tab.pendingUrl
+                overridenUrls.set(url, new Date())
+                chrome.tabs.create({
+                    active: true,
+                    url: url
+                })
+            }
+        });
+    })
+}
+
+function ShowNotification(tab: chrome.tabs.Tab, request: string, timeout = 3000, callback?: (notificationId: string) => void) {
     chrome.notifications.create("", {
         type: "basic",
         title: "Duplicate Tab Skipper",
         iconUrl: "/icon.png",
         message: `${request}: ${tab.title?.split("•")[0]} at ${tab.url || tab.pendingUrl}`,
-    }, (id: string) => {
-        setTimeout(() => { chrome.notifications.clear(id) }, timeout);
+    }, (notificationId: string) => {
+        setTimeout(() => { chrome.notifications.clear(notificationId) }, timeout);
+        if (callback) {
+            callback(notificationId)
+        }
     });
     return true;
 }

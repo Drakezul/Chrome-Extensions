@@ -1,1 +1,1 @@
-code . && npm run gulp
+code . && npm run watch
