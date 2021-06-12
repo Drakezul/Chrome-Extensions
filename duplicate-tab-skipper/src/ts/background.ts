@@ -20,7 +20,7 @@ function removeDuplicate(tab: chrome.tabs.Tab, callback = (_: boolean) => { }) {
     if (!tab.id) {
         return callback(false)
     }
-    let url = tab.url || tab.pendingUrl
+    let url = tab.pendingUrl || tab.url
     if (overridenUrls.has(url)) {
         let ageInMs = new Date().getTime() - overridenUrls.get(url).getTime()
         if (ageInMs < 5000) {
@@ -40,7 +40,7 @@ function ShowDuplicateRemovedNotification(tab: chrome.tabs.Tab, timeout = 3000) 
     return ShowNotification(tab, "Duplicate", timeout, (notificationId) => {
         chrome.notifications.onClicked.addListener((clickedNotificationId) => {
             if (clickedNotificationId == notificationId) {
-                let url = tab.url || tab.pendingUrl
+                let url = tab.pendingUrl ||tab.url
                 overridenUrls.set(url, new Date())
                 chrome.tabs.create({
                     active: true,
@@ -56,7 +56,7 @@ function ShowNotification(tab: chrome.tabs.Tab, request: string, timeout = 3000,
         type: "basic",
         title: "Duplicate Tab Skipper",
         iconUrl: "/icon.png",
-        message: `${request}: ${tab.title?.split("•")[0]} at ${tab.url || tab.pendingUrl}`,
+        message: `${request}: ${tab.title?.split("•")[0]} at ${tab.pendingUrl || tab.url}`,
     }, (notificationId: string) => {
         setTimeout(() => { chrome.notifications.clear(notificationId) }, timeout);
         if (callback) {

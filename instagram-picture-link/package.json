@@ -1,7 +1,7 @@
 {
   "name": "duplicate-tab-skipper",
   "version": "1.0.0",
-  "description": "Skip duplicate tabs and download instagram images",
+  "description": "Add link to maxres instagram pictures",
   "author": "Sebastian Grüb",
   "license": "MIT",
   "scripts": {
