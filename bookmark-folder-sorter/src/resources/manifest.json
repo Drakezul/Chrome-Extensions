@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmark Folder Sorter",
+  "description": "Sorts all bookmarks/favorites in a folder alphabetically",
+  "version": "1.0",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "bookmarks"
+  ]
+}
