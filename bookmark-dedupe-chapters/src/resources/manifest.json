@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Dedupe Chapter Bookmarks",
+  "description": "Tries to remove chapter bookmarks where a higher version is detected, skips unknown bookmarks",
+  "version": "1.0",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "bookmarks"
+  ]
+}
