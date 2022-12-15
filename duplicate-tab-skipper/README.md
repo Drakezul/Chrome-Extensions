@@ -1,0 +1,2 @@
+# Dupliate Tab Skipper - Chrome Extension
+This extension helps you skip tabs that are open twice. It will let you know with a notification while also allowing you to override this URL for 5 seconds, allowing you to open multiple versions.
