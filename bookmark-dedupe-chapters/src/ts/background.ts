@@ -6,6 +6,13 @@ interface ChapterBookmarkTreeNode extends chrome.bookmarks.BookmarkTreeNode {
     chapter?: number;
 }
 
+const DEFAULT_REGEX = "(\\d+\\-\\d+|\\d+\\.\\d+|\\d+)"
+
+const HOSTS_WITH_CUSTOM_REGEX = [{
+    host: "reaperscans.com",
+    regex: "chapter\\-" + DEFAULT_REGEX
+}]
+
 function chapterDedupeChilds(node: chrome.bookmarks.BookmarkTreeNode) {
     let nodes = node.children
     if (nodes == undefined) {
@@ -21,13 +28,16 @@ function chapterDedupeChilds(node: chrome.bookmarks.BookmarkTreeNode) {
     let urlBasePathIndex: { [baseUrl: string]: ChapterBookmarkTreeNode } = {}
     for (let child of nonFolderChildren) {
         let url = new URL(child.url)
-        let match = url.pathname.match("\\d+\\-\\d+|\\d+\\.\\d+|\\d+")
+
+        let regex = HOSTS_WITH_CUSTOM_REGEX.find((mapping) => mapping.host == url.host)?.regex || DEFAULT_REGEX
+
+        let match = url.pathname.match(regex)
         if (match === null) {
             console.log("No match for ", url)
             continue
         }
-        let chapter = parseFloat(match[0].replace("-", "."))
-
+        let chapter = parseFloat(match[1].replace("-", "."))
+                
         let basePath = url.pathname.substring(0, match.index)
 
         if (basePath in urlBasePathIndex) {
