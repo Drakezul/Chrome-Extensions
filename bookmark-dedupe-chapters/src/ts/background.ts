@@ -8,10 +8,16 @@ interface ChapterBookmarkTreeNode extends chrome.bookmarks.BookmarkTreeNode {
 
 const DEFAULT_REGEX = "(\\d+\\-\\d+|\\d+\\.\\d+|\\d+)"
 
-const HOSTS_WITH_CUSTOM_REGEX = [{
-    host: "reaperscans.com",
-    regex: "chapter\\-" + DEFAULT_REGEX
-}]
+const HOSTS_WITH_CUSTOM_REGEX = [
+    {
+        host: "reaperscans.com",
+        regex: "chapter\\-" + DEFAULT_REGEX
+    },
+    {
+        host: "www.asurascans.com",
+        regex: "chapter\\-" + DEFAULT_REGEX
+    }
+]
 
 function chapterDedupeChilds(node: chrome.bookmarks.BookmarkTreeNode) {
     let nodes = node.children
@@ -37,7 +43,7 @@ function chapterDedupeChilds(node: chrome.bookmarks.BookmarkTreeNode) {
             continue
         }
         let chapter = parseFloat(match[1].replace("-", "."))
-                
+
         let basePath = url.pathname.substring(0, match.index)
 
         if (basePath in urlBasePathIndex) {
