@@ -19,6 +19,11 @@ function removeDuplicate(tab: chrome.tabs.Tab, didRemove = (_: boolean) => { }) 
         return didRemove(false)
     }
     let url = tab.pendingUrl || tab.url
+
+    if (url == "chrome://newtab/") {
+        return didRemove(false)
+    }
+
     if (overridenUrls.has(url)) {
         let ageInMs = new Date().getTime() - overridenUrls.get(url).getTime()
         if (ageInMs < 5000) {
