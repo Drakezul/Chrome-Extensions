@@ -16,33 +16,63 @@ const DEFAULT_REGEX = "chapter\\-" + BASE_REGEX
 //     }
 // ]
 
+function parseChapterNumberFromMatch(match: RegExpMatchArray) {
+    return parseFloat(match[1].replace("-", "."))
+}
+
+function manageIndexAndKeepLaterChapter(node: chrome.bookmarks.BookmarkTreeNode, chapter: number, base: string, index: { [base: string]: ChapterBookmarkTreeNode }) {
+    if (base in index) {
+        if (index[base].chapter > chapter) {
+            chrome.bookmarks.move(node.id, { parentId: todaysArchiveN.id })
+            console.log("Moved existing ", node, "to archive ", todaysArchiveN.title)
+        } else {
+            chrome.bookmarks.move(index[base].id, { parentId: todaysArchiveN.id })
+            console.log("Removed newly created node ", index[base])
+        }
+    } else {
+        index[base] = node
+        index[base].chapter = chapter
+    }
+}
+
+function matchTitle(node: chrome.bookmarks.BookmarkTreeNode, titleIndex: { [baseTitle: string]: ChapterBookmarkTreeNode }) {
+    let title = node.title
+    let match = title.match(/.*chapter (\d+\.?\d+)(.*)/i)
+    if (match === null) {
+        console.log("No title match for ", node.title)
+        return false
+    }
+    let chapter = parseChapterNumberFromMatch(match)
+    let baseTitle = match[0].replace(match[1], "")
+    console.debug("Base title ", baseTitle)
+
+    manageIndexAndKeepLaterChapter(node, chapter, baseTitle, titleIndex)
+    return true
+}
+
+function matchUrl(node: chrome.bookmarks.BookmarkTreeNode, urlBasePathIndex: { [baseUrl: string]: ChapterBookmarkTreeNode }) {
+    let url = new URL(node.url)
+    let match = url.pathname.match(DEFAULT_REGEX)
+    if (match === null) {
+        console.log("No match for ", url)
+        return false
+    }
+    let chapter = parseChapterNumberFromMatch(match)
+    let basePath = url.pathname.substring(0, match.index)
+    console.debug("Base path ", basePath)
+
+    manageIndexAndKeepLaterChapter(node, chapter, basePath, urlBasePathIndex)
+    return true
+}
+
 function removeDuplicates(nonFolderChildren: chrome.bookmarks.BookmarkTreeNode[]) {
     let urlBasePathIndex: { [baseUrl: string]: ChapterBookmarkTreeNode } = {}
+    let titleIndex: { [baseTitle: string]: ChapterBookmarkTreeNode } = {}
     for (let child of nonFolderChildren) {
-        let url = new URL(child.url)
-
-        let match = url.pathname.match(DEFAULT_REGEX)
-        if (match === null) {
-            console.log("No match for ", url)
+        if (matchTitle(child, titleIndex)) {
             continue
         }
-        let chapter = parseFloat(match[1].replace("-", "."))
-
-        let basePath = url.pathname.substring(0, match.index)
-        console.debug("Base path ", basePath)
-
-        if (basePath in urlBasePathIndex) {
-            if (urlBasePathIndex[basePath].chapter > chapter) {
-                chrome.bookmarks.move(child.id, { parentId: todaysArchiveN.id })
-                console.log("Moved existing ", child, "to archive ", todaysArchiveN.title)
-            } else {
-                chrome.bookmarks.move(urlBasePathIndex[basePath].id, { parentId: todaysArchiveN.id })
-                console.log("Removed newly created node ", urlBasePathIndex[basePath])
-            }
-        } else {
-            urlBasePathIndex[basePath] = child
-            urlBasePathIndex[basePath].chapter = chapter
-        }
+        matchUrl(child, urlBasePathIndex)
     }
 }
 
