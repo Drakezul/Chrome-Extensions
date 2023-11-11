@@ -16,8 +16,8 @@ const DEFAULT_REGEX = "chapter\\-" + BASE_REGEX
 //     }
 // ]
 
-function parseChapterNumberFromMatch(match: RegExpMatchArray) {
-    return parseFloat(match[1].replace("-", "."))
+function parseChapterNumberFromMatch(chapterNo: string) {
+    return parseFloat(chapterNo.replace("-", "."))
 }
 
 function manageIndexAndKeepLaterChapter(node: chrome.bookmarks.BookmarkTreeNode, chapter: number, base: string, index: { [base: string]: ChapterBookmarkTreeNode }) {
@@ -37,13 +37,17 @@ function manageIndexAndKeepLaterChapter(node: chrome.bookmarks.BookmarkTreeNode,
 
 function matchTitle(node: chrome.bookmarks.BookmarkTreeNode, titleIndex: { [baseTitle: string]: ChapterBookmarkTreeNode }) {
     let title = node.title
-    let match = title.match(/.*chapter (\d+\.?\d+)(.*)/i)
+    let match = title.match(/(.*)chapter (\d+\.?\d+)(.*)/i)
     if (match === null) {
         console.log("No title match for ", node.title)
         return false
     }
-    let chapter = parseChapterNumberFromMatch(match)
-    let baseTitle = match[0].replace(match[1], "")
+    let chapter = parseChapterNumberFromMatch(match[2])
+    
+    let baseTitle = match[0].replace(match[2], "").toLowerCase()
+    if (match[1].length > 0){
+        baseTitle = match[1]
+    }    
     console.debug("Base title ", baseTitle)
 
     manageIndexAndKeepLaterChapter(node, chapter, baseTitle, titleIndex)
@@ -57,8 +61,8 @@ function matchUrl(node: chrome.bookmarks.BookmarkTreeNode, urlBasePathIndex: { [
         console.log("No match for ", url)
         return false
     }
-    let chapter = parseChapterNumberFromMatch(match)
-    let basePath = url.pathname.substring(0, match.index)
+    let chapter = parseChapterNumberFromMatch(match[1])
+    let basePath = url.pathname.substring(0, match.index).toLowerCase()
     console.debug("Base path ", basePath)
 
     manageIndexAndKeepLaterChapter(node, chapter, basePath, urlBasePathIndex)
