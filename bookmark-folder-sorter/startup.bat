@@ -1,1 +1,1 @@
-code . && npm run watch
+npm run watch

@@ -7,6 +7,10 @@ function getUserRootBookmarkFolders(userRootBookmark: chrome.bookmarks.BookmarkT
 }
 
 function sortNode(node: chrome.bookmarks.BookmarkTreeNode) {
+    if (node.title.startsWith("_")) {
+        console.log("Skipping ", node.title)
+        return
+    }
     let nodes = node.children
     if (nodes == undefined) {
         console.log("No children found for ", node)
